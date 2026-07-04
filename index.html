@@ -1,11 +1,76 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Real-data-</title>
+<meta charset="UTF-8">
+<title>PhoneInfoga 🔥</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+  body { font-family: 'Press Start 2P', system-ui; }
+  .emoji-rain { position: fixed; top: -50px; font-size: 2rem; animation: fall 4s linear forwards; pointer-events: none; z-index: 10; }
+  @keyframes fall { to { transform: translateY(120vh); } }
+</style>
 </head>
-<body>
-  Ddd
+<body class="bg-gradient-to-br from-purple-950 via-black to-fuchsia-950 text-white overflow-hidden min-h-screen">
+  <div class="max-w-lg mx-auto pt-12 px-6 relative z-20">
+    <div class="text-center mb-10">
+      <div class="text-6xl mb-3 animate-bounce">📱💥🔥</div>
+      <h1 class="text-5xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-cyan-400">PHONEINFOGA</h1>
+      <p class="text-cyan-300 text-sm mt-2">SAMARTH EDITION ✨</p>
+    </div>
+
+    <div class="glass bg-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
+      <input id="phone" 
+             class="w-full bg-black/60 border border-pink-500 focus:border-cyan-400 rounded-2xl px-6 py-6 text-2xl outline-none text-center font-mono placeholder:text-pink-300"
+             placeholder="+14152229670">
+      
+      <button onclick="scan()" 
+              class="mt-6 w-full py-6 bg-gradient-to-r from-pink-600 to-cyan-500 rounded-2xl font-bold text-xl tracking-widest hover:scale-105 transition-transform flex items-center justify-center gap-3 shadow-lg">
+        <span>SCAN TARGET</span> 
+        <span class="text-3xl">🎯</span>
+      </button>
+    </div>
+
+    <div id="result" class="hidden mt-8 bg-black/70 border border-cyan-400/50 rounded-3xl p-8"></div>
+  </div>
+
+  <div id="emojis"></div>
+
+<script>
+function createEmoji() {
+  const e = document.createElement('div');
+  e.className = 'emoji-rain';
+  e.textContent = ['🔥','📱','🕵️','💣','⚡','🌐','🕵️‍♂️','🔍'][Math.floor(Math.random()*8)];
+  e.style.left = Math.random() * 100 + 'vw';
+  e.style.animationDuration = (Math.random() * 3 + 3) + 's';
+  document.getElementById('emojis').appendChild(e);
+  setTimeout(() => e.remove(), 6000);
+}
+
+setInterval(createEmoji, 80);
+
+async function scan() {
+  const num = document.getElementById('phone').value;
+  if (!num) return;
+  
+  const res = await fetch('/api/scan', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({number: num})
+  });
+  
+  const data = await res.json();
+  const div = document.getElementById('result');
+  div.classList.remove('hidden');
+  div.innerHTML = `
+    <div class="text-center text-4xl mb-6 animate-pulse">🎉 OSINT COMPLETE 🎉</div>
+    <pre class="bg-black/50 p-6 rounded-2xl text-xs overflow-auto text-cyan-300">${JSON.stringify(data, null, 2)}</pre>
+  `;
+  
+  // Extra emoji explosion
+  for(let i=0; i<30; i++) setTimeout(createEmoji, i*30);
+}
+</script>
 </body>
 </html>
