@@ -10,35 +10,41 @@ class handler(BaseHTTPRequestHandler):
             length = int(self.headers.get('content-length', 0))
             data = json.loads(self.rfile.read(length))
             raw = str(data.get("number", "")).strip()
-            
             if not raw.startswith('+'):
                 raw = '+' + raw.lstrip('+')
             
             parsed = phonenumbers.parse(raw)
             num = phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+            clean_num = num.replace('+', '')
             
             result = {
                 "success": True,
-                "valid": phonenumbers.is_valid_number(parsed),
-                "e164": num,
-                "international": phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.INTERNATIONAL),
-                "local": phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.NATIONAL),
-                "country": geocoder.description_for_number(parsed, "en"),
-                "carrier": carrier.name_for_number(parsed, "en") or "Unknown",
-                "countryCode": parsed.country_code,
-                "timezone": timezone.time_zones_for_number(parsed),
-                "type": "Mobile" if phonenumbers.number_type(parsed) == 1 else "Fixed Line",
-                
-                # Extra OSINT flavor
-                "google_dorks": [
-                    f"https://www.google.com/search?q=%22{num}%22",
-                    f"https://www.google.com/search?q=site:facebook.com+{num}",
-                    f"https://www.google.com/search?q=site:truecaller.com+{num}"
-                ],
-                "reputation": random.choice(["Clean", "Reported as spam 3 times", "High risk", "Linked to scams"]),
-                "disposable": "No" if random.random() > 0.3 else "Yes - Possible VoIP",
-                "social_footprint": f"Found on {random.randint(1,12)} platforms",
-                "warning": "Use at your own risk - for educational purposes only"
+                "basic": {
+                    "valid": phonenumbers.is_valid_number(parsed),
+                    "e164": num,
+                    "international": phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.INTERNATIONAL),
+                    "local": phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.NATIONAL),
+                    "country": geocoder.description_for_number(parsed, "en"),
+                    "carrier": carrier.name_for_number(parsed, "en") or "Unknown",
+                    "countryCode": parsed.country_code,
+                    "timezone": timezone.time_zones_for_number(parsed),
+                    "type": "Mobile" if phonenumbers.number_type(parsed) == 1 else "Fixed Line"
+                },
+                "osint": {
+                    "google_dorks": [
+                        f"https://google.com/search?q=%22{num}%22",
+                        f"https://google.com/search?q=site:facebook.com+intext:{clean_num}",
+                        f"https://google.com/search?q=site:truecaller.com+{clean_num}",
+                        f"https://google.com/search?q=site:whatsapp.com+{clean_num}"
+                    ],
+                    "reputation": random.choice(["Clean", "Spam reports: 7", "Scam linked", "Debt collector"]),
+                    "disposable": random.choice(["No", "Possible VoIP / Temp number"]),
+                    "social": f"Found mentions on {random.randint(3,15)} platforms (FB, IG, Twitter, etc.)",
+                    "leaks": random.choice(["No known leaks", "Appears in 2 data breaches"]),
+                    "location_hint": geocoder.description_for_number(parsed, "en")
+                },
+                "warning": "This is simulated OSINT data for demonstration. Real investigations require legal tools.",
+                "scan_time": "0.8s"
             }
             
             self.send_response(200)
@@ -46,8 +52,8 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(result, indent=2).encode())
             
-        except Exception:
+        except Exception as e:
             self.send_response(400)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({"error": "bad number - use full international format e.g. +919876543210"}).encode())
+            self.wfile.write(json.dumps({"error": "Invalid number. Use full international format (+country code)"}).encode())
